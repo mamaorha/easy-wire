@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -436,12 +437,12 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	{
 		try
 		{
-			populateFields(bean, beanOnly, classTrace);
-
 			if (!skipBeanLoadingInConfiguration)
 			{
 				handleConfiguration(bean, classTrace);
 			}
+
+			populateFields(bean, beanOnly, classTrace);
 
 			handleConfigurationProperties(bean);
 			handlePostConstruct(bean);
@@ -721,30 +722,6 @@ public class EasywireBeanFactory extends BeanFactoryStub
 			fieldsInvestigator.setFieldValue(field, bean, BeanProvider.getBeanProviderObject(clazz));
 		}
 
-		else if (field.getType() == Optional.class)
-		{
-			Class<?> clazz = Class.forName(((ParameterizedType) (field.getGenericType())).getActualTypeArguments()[0].getTypeName());
-
-			try
-			{
-				Object optionalBean = getBean(clazz, beanOnly, classTrace);
-
-				if (!Mockito.mockingDetails(optionalBean).isMock())
-				{
-					fieldsInvestigator.setFieldValue(field, bean, Optional.of(optionalBean));
-				}
-
-				else
-				{
-					fieldsInvestigator.setFieldValue(field, bean, Optional.ofNullable(null));
-				}
-			}
-			catch (Exception e)
-			{
-				fieldsInvestigator.setFieldValue(field, bean, Optional.ofNullable(null));
-			}
-		}
-
 		else
 		{
 			Type genericType = field.getGenericType();
@@ -772,22 +749,22 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 			if (actualTypeArguments.length > 0)
 			{
-				String typeName = actualTypeArguments[0].getTypeName();
-
-				Type rawType = parameterizedField.getRawType();
-
-				if (rawType == List.class)
+				if (actualTypeArguments.length == 1)
 				{
-					if (typeName.endsWith("<?>"))
+					String typeName = actualTypeArguments[0].getTypeName();
+
+					Type rawType = parameterizedField.getRawType();
+
+					if (rawType == List.class)
 					{
-						typeName = typeName.substring(0, typeName.length() - "<?>".length());
+						if (typeName.endsWith("<?>"))
+						{
+							typeName = typeName.substring(0, typeName.length() - "<?>".length());
+						}
+
+						return getBeans(Class.forName(typeName), beanOnly, classTrace);
 					}
 
-					return getBeans(Class.forName(typeName), beanOnly, classTrace);
-				}
-
-				else
-				{
 					if ("javax.inject.Provider".equals(rawType.getTypeName()))
 					{
 						return BeanProvider.getBeanProviderObject(Class.forName(typeName));
@@ -797,8 +774,19 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					{
 						try
 						{
-							Object optionalBean = getBean(Class.forName(typeName), beanOnly, classTrace);
-							return Optional.of(optionalBean);
+							Object optionalBean = getBeanByType(actualTypeArguments[0], beanOnly, classTrace);
+
+							// Object optionalBean = getBean(Class.forName(typeName), beanOnly, classTrace);
+
+							if (!Mockito.mockingDetails(optionalBean).isMock())
+							{
+								return Optional.of(optionalBean);
+							}
+
+							else
+							{
+								return Optional.ofNullable(null);
+							}
 						}
 						catch (Exception e)
 						{
@@ -816,6 +804,32 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 					// handle simple bean
 					return getBean(Class.forName(typeName), beanOnly);
+				}
+
+				else if (actualTypeArguments.length == 2)
+				{
+					String typeName = actualTypeArguments[1].getTypeName();
+
+					Type rawType = parameterizedField.getRawType();
+
+					if (rawType == Map.class)
+					{
+						if (typeName.endsWith("<?>"))
+						{
+							typeName = typeName.substring(0, typeName.length() - "<?>".length());
+						}
+
+						List<?> beans = getBeans(Class.forName(typeName), beanOnly, classTrace);
+
+						Map<String, Object> map = new HashMap<>();
+
+						for (Object object : beans)
+						{
+							map.put(object.getClass().getSimpleName(), object);
+						}
+
+						return map;
+					}
 				}
 			}
 		}
