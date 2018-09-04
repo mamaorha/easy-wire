@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.mockito.cglib.proxy.MethodInterceptor;
 import org.mockito.cglib.proxy.MethodProxy;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.Order;
@@ -168,6 +169,11 @@ public class BeanHolder
 
 				if (null != reallClass)
 				{
+					if (newInstance.getClass().isAnnotationPresent(Configuration.class))
+					{
+						beanInstance = newInstance;
+					}
+
 					EasywireBeanFactory.INSTANCE.initBean(newInstance, beanOnly, false, classTrace);
 				}
 			}
@@ -181,6 +187,7 @@ public class BeanHolder
 
 				if (EasywireBeanFactory.INSTANCE.isBeanLoaded(declaringConfigurationClass))
 				{
+					classTrace.remove(declaringConfigurationClass);
 					tempConfigurationInstance = EasywireBeanFactory.INSTANCE.getBean(declaringConfigurationClass, true, classTrace);
 				}
 

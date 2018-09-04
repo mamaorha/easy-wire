@@ -437,12 +437,12 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	{
 		try
 		{
+			populateFields(bean, beanOnly, classTrace);
+
 			if (!skipBeanLoadingInConfiguration)
 			{
 				handleConfiguration(bean, classTrace);
 			}
-
-			populateFields(bean, beanOnly, classTrace);
 
 			handleConfigurationProperties(bean);
 			handlePostConstruct(bean);
