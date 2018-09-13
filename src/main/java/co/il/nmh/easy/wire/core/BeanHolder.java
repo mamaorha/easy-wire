@@ -181,6 +181,8 @@ public class BeanHolder
 			else if (bean instanceof Method)
 			{
 				Method method = (Method) bean;
+				method.setAccessible(true);
+
 				Class<?> declaringConfigurationClass = method.getDeclaringClass();
 
 				Object tempConfigurationInstance = null;
