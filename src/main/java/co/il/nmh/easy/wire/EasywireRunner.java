@@ -138,7 +138,12 @@ public class EasywireRunner extends BlockJUnit4ClassRunner
 
 	private void loadProperties(EasywireProperties easywireProperties, Class<?> clazz)
 	{
-		String defaultBasePackage = clazz.getPackage().getName();
+		String defaultBasePackage = "";
+
+		if (null != clazz.getPackage())
+		{
+			defaultBasePackage = clazz.getPackage().getName();
+		}
 
 		if (null != easywireProperties)
 		{

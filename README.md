@@ -29,3 +29,9 @@ special use cases:
 	- EasywireBeanFactory.INSTANCE.overrideLogger(A.class)
 	- in the test you can now inject LoggerTest
 	- use methods such as List<String> logs = loggerTest.getLogs(Level.INFO) or String lastLog = loggerTest.getLastLog(Level.INFO);
+
+	
+TODO
+-------------------
+split into several modules in order to support spring boot 2 changes.
+use interfaces that the modules will implement - choose implementor based on if class if is in the class loader.
