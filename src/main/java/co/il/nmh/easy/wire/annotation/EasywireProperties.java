@@ -26,9 +26,9 @@ public @interface EasywireProperties
 	String propertyProfile() default "test";
 
 	/**
-	 * bean scan will be set from this package
+	 * bean scan will be set from this packages
 	 */
-	String basePackage();
+	String[] scanBasePackages() default {};
 
 	/**
 	 * clean all beans and start a new context (when working with few junit classes Easywire uses the same context un less this is set to true)

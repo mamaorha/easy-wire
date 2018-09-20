@@ -10,7 +10,7 @@ import co.il.nmh.easy.wire.annotation.EasywireProperties;
  */
 
 @RunWith(EasywireRunner.class)
-@EasywireProperties(basePackage = "co.il.nmh")
+@EasywireProperties(scanBasePackages = "co.il.nmh")
 public class TestingExample
 {
 	@Test

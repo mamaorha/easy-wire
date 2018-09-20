@@ -1,6 +1,7 @@
 package co.il.nmh.easy.wire;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -147,12 +148,27 @@ public class EasywireRunner extends BlockJUnit4ClassRunner
 
 		if (null != easywireProperties)
 		{
-			String basePackage = easywireProperties.basePackage();
+			String[] basePackages = easywireProperties.scanBasePackages();
+			Arrays.sort(basePackages);
 
-			if (null == basePackage)
+			StringBuilder basePackageBuilder = new StringBuilder();
+
+			for (String currBasePackage : basePackages)
+			{
+				basePackageBuilder.append(currBasePackage).append(",");
+			}
+
+			String basePackage = null;
+
+			if (basePackages.length == 0)
 			{
 				basePackage = defaultBasePackage;
 				log.warn("basePackage was not set, using default {}", basePackage);
+			}
+
+			else
+			{
+				basePackage = basePackageBuilder.toString();
 			}
 
 			EasywireBeanFactory.INSTANCE.setBasePackage(basePackage);

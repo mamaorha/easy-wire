@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
 import co.il.nmh.easy.wire.EasywireRunner;
 import co.il.nmh.easy.wire.data.BeanInformation;
@@ -58,12 +59,34 @@ public class ReflectionManager
 					Set<Method> beanMethods = reflections.getMethodsAnnotatedWith(Bean.class);
 
 					Set<Class<?>> beans = new HashSet<>();
-					beans.addAll(reflections.getTypesAnnotatedWith(Named.class, true));
-					beans.addAll(reflections.getTypesAnnotatedWith(Component.class, true));
-					beans.addAll(reflections.getTypesAnnotatedWith(Controller.class, true));
-					beans.addAll(reflections.getTypesAnnotatedWith(Repository.class, true));
-					beans.addAll(reflections.getTypesAnnotatedWith(Service.class, true));
-					beans.addAll(reflections.getTypesAnnotatedWith(Configuration.class, true));
+
+					try
+					{
+						beans.addAll(reflections.getTypesAnnotatedWith(Named.class, true));
+					}
+					catch (NoClassDefFoundError e)
+					{
+					}
+
+					try
+					{
+						beans.addAll(reflections.getTypesAnnotatedWith(RestController.class, true));
+					}
+					catch (NoClassDefFoundError e)
+					{
+					}
+
+					try
+					{
+						beans.addAll(reflections.getTypesAnnotatedWith(Component.class, true));
+						beans.addAll(reflections.getTypesAnnotatedWith(Controller.class, true));
+						beans.addAll(reflections.getTypesAnnotatedWith(Repository.class, true));
+						beans.addAll(reflections.getTypesAnnotatedWith(Service.class, true));
+						beans.addAll(reflections.getTypesAnnotatedWith(Configuration.class, true));
+					}
+					catch (NoClassDefFoundError e)
+					{
+					}
 
 					Map<Class<?>, BeanInformation> beanInformationMap = new HashMap<>();
 
@@ -153,7 +176,12 @@ public class ReflectionManager
 				{
 					Collection<URL> urls = new HashSet<>();
 
-					urls.addAll(ClasspathHelper.forPackage(basePackage));
+					String[] basePackages = basePackage.split(",");
+
+					for (String currBasePackage : basePackages)
+					{
+						urls.addAll(ClasspathHelper.forPackage(currBasePackage));
+					}
 
 					// adding easy-wire base path
 					urls.addAll(ClasspathHelper.forPackage(EasywireRunner.class.getPackage().getName()));

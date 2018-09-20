@@ -31,8 +31,6 @@ import org.slf4j.Logger;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +45,8 @@ import co.il.nmh.easy.utils.reflection.FieldsInvestigator;
 import co.il.nmh.easy.wire.core.base.BeanFactoryStub;
 import co.il.nmh.easy.wire.core.utils.BeanProvider;
 import co.il.nmh.easy.wire.core.utils.LoggerTest;
-import co.il.nmh.easy.wire.core.utils.PropertyManager;
-import co.il.nmh.easy.wire.core.utils.PropertyManager.PropertyValue;
+import co.il.nmh.easy.wire.core.utils.properties.PropertyManager;
+import co.il.nmh.easy.wire.core.utils.properties.PropertyManager.PropertyValue;
 import co.il.nmh.easy.wire.data.BasePackageMap;
 import co.il.nmh.easy.wire.data.BeanInformation;
 import co.il.nmh.easy.wire.data.OrderObject;
@@ -444,7 +442,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				handleConfiguration(bean, classTrace);
 			}
 
-			handleConfigurationProperties(bean);
+			propertyManager.handleConfigurationProperties(bean);
 			handlePostConstruct(bean);
 		}
 		catch (BindException e)
@@ -518,27 +516,6 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		}
 	}
 
-	private <T> void handleConfigurationProperties(T bean) throws BindException
-	{
-		ConfigurationProperties configurationProperties = bean.getClass().getAnnotation(ConfigurationProperties.class);
-
-		if (null != configurationProperties && null != propertyManager.getPropertySources())
-		{
-			String prefix = configurationProperties.prefix();
-			String value = configurationProperties.value();
-
-			if (null == value || value.isEmpty())
-			{
-				value = prefix;
-			}
-
-			PropertiesConfigurationFactory<?> configurationFactory = new PropertiesConfigurationFactory<>(bean);
-			configurationFactory.setPropertySources(propertyManager.getPropertySources());
-			configurationFactory.setTargetName(value);
-			configurationFactory.bindPropertiesToTarget();
-		}
-	}
-
 	public <T> void handlePostConstruct(T bean)
 	{
 		List<Class<?>> classesHierarchy = new ArrayList<>();
@@ -581,6 +558,15 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private <T> void handleInject(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
+		try
+		{
+			Inject.class.getName();
+		}
+		catch (NoClassDefFoundError e)
+		{
+			return;
+		}
+
 		Inject inject = field.getAnnotation(Inject.class);
 
 		if (null == inject)
@@ -716,7 +702,20 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private <T> void populateBeanField(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
-		if (field.getType() == BeanProvider.class || field.getType() == Provider.class)
+		boolean javaxAvailable = false;
+
+		try
+		{
+			BeanProvider.class.getName();
+			Provider.class.getName();
+
+			javaxAvailable = true;
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		if (javaxAvailable && (field.getType() == BeanProvider.class || field.getType() == Provider.class))
 		{
 			Class<?> clazz = Class.forName(((ParameterizedType) (field.getGenericType())).getActualTypeArguments()[0].getTypeName());
 			fieldsInvestigator.setFieldValue(field, bean, BeanProvider.getBeanProviderObject(clazz));

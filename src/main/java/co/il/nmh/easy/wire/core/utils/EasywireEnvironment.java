@@ -10,7 +10,7 @@ import co.il.nmh.easy.wire.core.EasywireBeanFactory;
  * @author Maor Hamami
  */
 
-public class EnvironmentTest implements Environment
+public class EasywireEnvironment implements Environment
 {
 	private Properties getProperties()
 	{

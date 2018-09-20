@@ -1,14 +1,10 @@
-package co.il.nmh.easy.wire.core.utils;
+package co.il.nmh.easy.wire.core.utils.properties;
 
-import java.util.Map;
 import java.util.Properties;
 
-import org.springframework.boot.env.YamlPropertySourceLoader;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
-import org.springframework.core.env.PropertySource;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.validation.BindException;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author Maor Hamami
  */
-
 @Slf4j
 public class PropertyManager
 {
@@ -38,38 +33,33 @@ public class PropertyManager
 		this.properties = null;
 		this.propertySources = null;
 
-		YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
-
-		try
+		if (SpringPropertiesV1.isAvailable())
 		{
-			properties = new Properties();
+			properties = SpringPropertiesV1.buildPropertySources(propertyFile, profile);
+		}
 
-			// load common properties
-			PropertySource<?> applicationYamlPropertySource = loader.load("properties", new ClassPathResource(propertyFile), null);
-			Map<String, Object> source = ((MapPropertySource) applicationYamlPropertySource).getSource();
+		else
+		{
+			log.error("couldn't load properties, spring version is not supported");
+		}
 
-			properties.putAll(source);
-
-			// load profile properties
-			if (null != profile)
-			{
-				applicationYamlPropertySource = loader.load("properties", new ClassPathResource(propertyFile), profile);
-
-				if (null != applicationYamlPropertySource)
-				{
-					source = ((MapPropertySource) applicationYamlPropertySource).getSource();
-
-					properties.putAll(source);
-				}
-			}
-
+		if (null != properties)
+		{
 			propertySources = new MutablePropertySources();
 			propertySources.addLast(new PropertiesPropertySource("apis", properties));
 		}
+	}
 
-		catch (Exception e)
+	public <T> void handleConfigurationProperties(T bean) throws BindException
+	{
+		if (SpringPropertiesV1.isAvailable())
 		{
-			log.error("{} file cannot be found.", propertyFile);
+			SpringPropertiesV1.handleConfigurationProperties(bean, propertySources);
+		}
+
+		else
+		{
+			log.error("couldn't load properties, spring version is not supported");
 		}
 	}
 
