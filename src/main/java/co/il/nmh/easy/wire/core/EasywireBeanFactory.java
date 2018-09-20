@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.mockito.Mock;
@@ -35,10 +34,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 import org.springframework.validation.BindException;
 
 import co.il.nmh.easy.utils.reflection.FieldsInvestigator;
@@ -394,7 +389,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 						{
 							Class<? extends Annotation> annotationClass = annotation.annotationType();
 
-							if (annotationClass == Named.class || annotationClass == Component.class || annotationClass == Controller.class || annotationClass == Repository.class || annotationClass == Service.class || annotationClass == Configuration.class)
+							String name = annotationClass.getName();
+
+							if ("javax.inject.Named".equals(name) || "org.springframework.stereotype.Component".equals(name) || "org.springframework.stereotype.Controller".equals(name) || "org.springframework.stereotype.Repository".equals(name) || "org.springframework.stereotype.Service".equals(name) || "org.springframework.web.bind.annotation.RestController".equals(name) || "org.springframework.context.annotation.Configuration".equals(name))
 							{
 								bean = true;
 								break;
