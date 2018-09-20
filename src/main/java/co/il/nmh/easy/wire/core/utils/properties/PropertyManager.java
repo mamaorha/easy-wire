@@ -2,6 +2,7 @@ package co.il.nmh.easy.wire.core.utils.properties;
 
 import java.util.Properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.validation.BindException;
@@ -38,6 +39,11 @@ public class PropertyManager
 			properties = SpringPropertiesV1.buildPropertySources(propertyFile, profile);
 		}
 
+		else if (SpringPropertiesV2.isAvailable())
+		{
+			properties = SpringPropertiesV2.buildPropertySources(propertyFile, profile);
+		}
+
 		else
 		{
 			log.error("couldn't load properties, spring version is not supported");
@@ -52,14 +58,32 @@ public class PropertyManager
 
 	public <T> void handleConfigurationProperties(T bean) throws BindException
 	{
-		if (SpringPropertiesV1.isAvailable())
-		{
-			SpringPropertiesV1.handleConfigurationProperties(bean, propertySources);
-		}
+		ConfigurationProperties configurationProperties = bean.getClass().getAnnotation(ConfigurationProperties.class);
 
-		else
+		if (null != configurationProperties && null != propertySources)
 		{
-			log.error("couldn't load properties, spring version is not supported");
+			String prefix = configurationProperties.prefix();
+			String value = configurationProperties.value();
+
+			if (null == value || value.isEmpty())
+			{
+				value = prefix;
+			}
+
+			if (SpringPropertiesV1.isAvailable())
+			{
+				SpringPropertiesV1.handleConfigurationProperties(bean, value, propertySources);
+			}
+
+			else if (SpringPropertiesV2.isAvailable())
+			{
+				SpringPropertiesV2.handleConfigurationProperties(bean, value, properties);
+			}
+
+			else
+			{
+				log.error("couldn't load properties, spring version is not supported");
+			}
 		}
 	}
 

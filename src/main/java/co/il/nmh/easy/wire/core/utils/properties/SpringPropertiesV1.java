@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.env.YamlPropertySourceLoader;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -56,25 +55,12 @@ public class SpringPropertiesV1
 		}
 	}
 
-	public static <T> void handleConfigurationProperties(T bean, MutablePropertySources propertySources) throws BindException
+	public static <T> void handleConfigurationProperties(T bean, String value, MutablePropertySources propertySources) throws BindException
 	{
-		ConfigurationProperties configurationProperties = bean.getClass().getAnnotation(ConfigurationProperties.class);
-
-		if (null != configurationProperties && null != propertySources)
-		{
-			String prefix = configurationProperties.prefix();
-			String value = configurationProperties.value();
-
-			if (null == value || value.isEmpty())
-			{
-				value = prefix;
-			}
-
-			PropertiesConfigurationFactory<?> configurationFactory = new PropertiesConfigurationFactory<>(bean);
-			configurationFactory.setPropertySources(propertySources);
-			configurationFactory.setTargetName(value);
-			configurationFactory.bindPropertiesToTarget();
-		}
+		PropertiesConfigurationFactory<?> configurationFactory = new PropertiesConfigurationFactory<>(bean);
+		configurationFactory.setPropertySources(propertySources);
+		configurationFactory.setTargetName(value);
+		configurationFactory.bindPropertiesToTarget();
 	}
 
 	public static boolean isAvailable()
