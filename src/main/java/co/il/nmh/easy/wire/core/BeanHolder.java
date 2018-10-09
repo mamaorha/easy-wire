@@ -214,7 +214,7 @@ public class BeanHolder
 						error = ((InvocationTargetException) e).getTargetException().getMessage();
 					}
 
-					throw new EasywireException("failed to invoke @Bean method {} from class {}, error: {}", method.getName(), declaringConfigurationClass, error);
+					throw new EasywireException("failed to invoke @Bean method {} from {}, error: {}", method.getName(), declaringConfigurationClass, error);
 				}
 			}
 

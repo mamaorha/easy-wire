@@ -111,6 +111,11 @@ public class BeanInformation
 				throw new EasywireException("bean {} has more than one implementation, please define one of them as primary");
 			}
 
+			if (null == selectedBeanHolder)
+			{
+				throw new EasywireException("couldn't find bean implementation for {}", clazz);
+			}
+
 			primaryBeanHolderMap.put(clazz, selectedBeanHolder);
 		}
 

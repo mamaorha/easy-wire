@@ -341,22 +341,32 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				continue;
 			}
 
-			int order = Integer.MAX_VALUE;
-			Object bean = getBean(implementingClass, beanOnly, classTrace);
-
-			if (beanOverrideMap.containsKey(basePackage, bean.getClass()))
+			try
 			{
-				BeanHolder beanHolder = beanOverrideMap.get(basePackage, bean.getClass());
-				order = beanHolder.getOrder();
-			}
+				int order = Integer.MAX_VALUE;
+				Object bean = getBean(implementingClass, beanOnly, classTrace);
 
-			else
+				if (beanOverrideMap.containsKey(basePackage, bean.getClass()))
+				{
+					BeanHolder beanHolder = beanOverrideMap.get(basePackage, bean.getClass());
+					order = beanHolder.getOrder();
+				}
+
+				else
+				{
+					BeanInformation beanInformation = beansMap.get(implementingClass);
+					order = beanInformation.order(bean.getClass());
+				}
+
+				orderObjects.add(new OrderObject(order, bean));
+			}
+			catch (EasywireException e)
 			{
-				BeanInformation beanInformation = beansMap.get(implementingClass);
-				order = beanInformation.order(bean.getClass());
+				if (!e.getMessage().equals("couldn't find bean implementation for class " + implementingClass.getName()))
+				{
+					throw e;
+				}
 			}
-
-			orderObjects.add(new OrderObject(order, bean));
 		}
 
 		Collections.sort(orderObjects);
