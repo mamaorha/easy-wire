@@ -29,6 +29,7 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -710,6 +711,14 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private <T> void populateBeanField(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
+		Qualifier qualifier = field.getAnnotation(Qualifier.class);
+
+		if (null != qualifier)
+		{
+			handleQualifier(bean, field, beanOnly, classTrace, qualifier.value());
+			return;
+		}
+
 		boolean javaxAvailable = false;
 
 		try
@@ -744,6 +753,21 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				fieldsInvestigator.setFieldValue(field, bean, beanByType);
 			}
 		}
+	}
+
+	private <T> void handleQualifier(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace, String qualifierValue)
+	{
+		List<?> beans = getBeans(field.getType(), beanOnly, classTrace);
+
+		for (Object currBean : beans)
+		{
+			if (currBean.getClass().getSimpleName().toLowerCase().equals(qualifierValue.toLowerCase()))
+			{
+				fieldsInvestigator.setFieldValue(field, bean, currBean);
+			}
+		}
+
+		throw new EasywireException("failed to find matching beans with Qualifier value {}", qualifierValue);
 	}
 
 	public Object getBeanByType(Type fieldType, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
