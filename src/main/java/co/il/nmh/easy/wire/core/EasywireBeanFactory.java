@@ -764,6 +764,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 			if (currBean.getClass().getSimpleName().toLowerCase().equals(qualifierValue.toLowerCase()))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, currBean);
+				return;
 			}
 		}
 
