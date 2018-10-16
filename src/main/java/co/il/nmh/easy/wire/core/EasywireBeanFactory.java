@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ClassUtils;
 import org.springframework.validation.BindException;
 
 import co.il.nmh.easy.utils.reflection.FieldsInvestigator;
@@ -747,6 +748,16 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	public Object getBeanByType(Type fieldType, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
+		if (fieldType instanceof Class)
+		{
+			Class<?> clazz = (Class<?>) fieldType;
+
+			if (ClassUtils.isPrimitiveOrWrapper(clazz))
+			{
+				throw new EasywireException("can't instantiate primitive type {}", clazz.getName());
+			}
+		}
+
 		// handle list - need to get all implementing beans
 		if (fieldType instanceof ParameterizedType)
 		{

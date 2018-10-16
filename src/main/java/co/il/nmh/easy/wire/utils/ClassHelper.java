@@ -22,18 +22,39 @@ public class ClassHelper
 			throw new RuntimeException("Bean " + clazz + " must have public constructor");
 		}
 
-		Constructor<?> constructor = constructors[0];
-		Object[] objects = buildMethodParameters(constructor.getGenericParameterTypes(), beanOnly, classTrace);
+		Constructor<?> validConstructor = null;
+		Object[] objects = null;
+		EasywireException exception = null;
+
+		for (Constructor<?> constructor : constructors)
+		{
+			try
+			{
+				objects = buildMethodParameters(constructor.getGenericParameterTypes(), beanOnly, classTrace);
+				validConstructor = constructor;
+
+				break;
+			}
+			catch (Exception e)
+			{
+				exception = new EasywireException("failed to invoke constructor for class {}, error: {}", clazz, e.getMessage());
+			}
+		}
+
+		if (null == validConstructor)
+		{
+			throw exception;
+		}
 
 		// try to instantiate class
 		try
 		{
-			T instance = clazz.cast(constructor.newInstance(objects));
+			T instance = clazz.cast(validConstructor.newInstance(objects));
 			return instance;
 		}
 		catch (Exception e)
 		{
-			throw new EasywireException("Failed to instanciate class {} with the following error {}", clazz.getName(), e.getMessage());
+			throw new EasywireException("Failed to instanciate class {} with the following error: {}", clazz.getName(), e.getMessage());
 		}
 	}
 
@@ -44,6 +65,7 @@ public class ClassHelper
 		for (int i = 0; i < parameterTypes.length; i++)
 		{
 			Type parameter = parameterTypes[i];
+
 			Object beanByType = EasywireBeanFactory.INSTANCE.getBeanByType(parameter, beanOnly, classTrace);
 
 			objects[i] = beanByType;

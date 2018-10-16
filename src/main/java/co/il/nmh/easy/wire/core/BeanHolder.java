@@ -198,7 +198,16 @@ public class BeanHolder
 					tempConfigurationInstance = EasywireBeanFactory.INSTANCE.getBean(TempConfigurationManager.class, false, classTrace).getTempConfiguration(declaringConfigurationClass, classTrace);
 				}
 
-				Object[] parameters = ClassHelper.buildMethodParameters(method.getGenericParameterTypes(), beanOnly, classTrace);
+				Object[] parameters = null;
+
+				try
+				{
+					parameters = ClassHelper.buildMethodParameters(method.getGenericParameterTypes(), beanOnly, classTrace);
+				}
+				catch (Exception e)
+				{
+					throw new EasywireException("failed to invoke method {} from {}, error: {}", method.getName(), declaringConfigurationClass, e.getMessage());
+				}
 
 				try
 				{
