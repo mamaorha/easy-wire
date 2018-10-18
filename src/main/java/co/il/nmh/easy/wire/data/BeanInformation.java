@@ -132,17 +132,19 @@ public class BeanInformation
 
 			if (isClassBean)
 			{
-				BeanHolder beanHolder = new BeanHolder(beanClass, classTrace);
-
-				Class<?> realClass = beanHolder.getRealClass();
-
-				if (!beanHolderMap.containsKey(realClass))
+				if (!beanClass.isInterface())
 				{
-					beanHolderMap.put(realClass, new HashSet<>());
-				}
+					BeanHolder beanHolder = new BeanHolder(beanClass, classTrace);
+					Class<?> realClass = beanHolder.getRealClass();
 
-				Set<BeanHolder> set = beanHolderMap.get(realClass);
-				set.add(beanHolder);
+					if (!beanHolderMap.containsKey(realClass))
+					{
+						beanHolderMap.put(realClass, new HashSet<>());
+					}
+
+					Set<BeanHolder> set = beanHolderMap.get(realClass);
+					set.add(beanHolder);
+				}
 			}
 
 			for (Method beanMethod : methods)

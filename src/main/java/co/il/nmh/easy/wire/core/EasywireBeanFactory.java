@@ -222,7 +222,25 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 					classTrace.add(requiredType);
 
-					return beanInformation.getBean(requiredType, classTrace);
+					try
+					{
+						return beanInformation.getBean(requiredType, classTrace);
+					}
+					catch (EasywireException e)
+					{
+						if (e.getMessage().equals(String.format("couldn't find bean implementation for %s", requiredType)))
+						{
+							T bean = getInterfaceMockImplementation(requiredType);
+
+							if (null != bean)
+							{
+								return bean;
+							}
+
+						}
+
+						throw e;
+					}
 				}
 
 				finally
@@ -239,27 +257,39 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				return insatnce;
 			}
 
-			try
+			T bean = getInterfaceMockImplementation(requiredType);
+
+			if (null != bean)
 			{
-				Class<?> clazz = Class.forName(requiredType.getName());
-
-				// if the class is interface, try finding the implementing class
-				if (clazz.isInterface())
-				{
-					log.warn("Please implement " + requiredType.getName() + ", using empty mock instead");
-
-					T mock = requiredType.cast(Mockito.mock(clazz));
-					pushBean(clazz, mock, false);
-
-					return mock;
-				}
-			}
-			catch (Exception e)
-			{
+				return bean;
 			}
 
 			throw new EasywireException("couldn't find bean implementation for {}", requiredType);
 		}
+	}
+
+	private <T> T getInterfaceMockImplementation(Class<T> requiredType)
+	{
+		try
+		{
+			Class<?> clazz = Class.forName(requiredType.getName());
+
+			// if the class is interface, try finding the implementing class
+			if (clazz.isInterface())
+			{
+				log.warn("Please implement " + requiredType.getName() + ", using empty mock instead");
+
+				T mock = requiredType.cast(Mockito.mock(clazz));
+				pushBean(clazz, mock, false);
+
+				return mock;
+			}
+		}
+		catch (Exception e)
+		{
+		}
+
+		return null;
 	}
 
 	private void prepare(Map<Class<?>, BeanInformation> beansMap, Class<?> requiredType)
