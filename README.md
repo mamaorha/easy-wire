@@ -30,8 +30,63 @@ special use cases:
 	- in the test you can now inject LoggerTest
 	- use methods such as List<String> logs = loggerTest.getLogs(Level.INFO) or String lastLog = loggerTest.getLastLog(Level.INFO);
 
-	
-TODO
--------------------
-split into several modules in order to support spring boot 2 changes.
-use interfaces that the modules will implement - choose implementor based on if class if is in the class loader.
+replace beans with mocks
+-------------------------
+#persistence
+
+- real class
+```xml
+package co.il.nmh.example.persistence.repositories;
+
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+
+import co.il.nmh.example.persistence.dto.ExampleDTO;
+
+@Repository
+public interface IExampleRepository extends CrudRepository<ExampleDTO, String>
+{
+}
+```
+
+- mock
+```xml
+package co.il.nmh.example.tests.mock.persistence;
+
+import co.il.nmh.example.persistence.dto.ExampleDTO;
+import co.il.nmh.example.persistence.repositories.ICustomerRepository;
+
+import co.il.nmh.easy.wire.utils.mock.persistence.CrudRepositoryMock;
+
+/**
+ * @author Maor Hamami
+ *
+ */
+
+public class CustomerRepositoryMock extends CrudRepositoryMock<ExampleDTO, String> implements IExampleRepository
+{
+}
+```
+- context class
+```xml
+package co.il.nmh.example.tests.context;
+
+import co.il.nmh.example.persistence.repositories.IExampleRepository;
+import co.il.nmh.example.tests.mock.RestClientMock;
+import co.il.nmh.example.tests.mock.persistence.ExampleRepositoryMock;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+
+import co.il.nmh.easy.http.proxy.core.RestClient;
+import co.il.nmh.easy.wire.core.EasywireBeanFactory;
+import co.il.nmh.easy.wire.core.base.IEasywireInitializer;
+
+public class ExampleManagementMockContext implements IEasywireInitializer
+{
+	@Override
+	public void initialize()
+	{
+		EasywireBeanFactory.INSTANCE.overrideBean(IExampleRepository.class, ExampleRepositoryMock.class);
+	}
+}
+```
