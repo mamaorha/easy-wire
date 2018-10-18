@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -230,7 +231,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					{
 						if (e.getMessage().equals(String.format("couldn't find bean implementation for %s", requiredType)))
 						{
-							T bean = getInterfaceMockImplementation(requiredType);
+							T bean = getInterfaceMockImplementation(requiredType, true);
 
 							if (null != bean)
 							{
@@ -257,7 +258,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				return insatnce;
 			}
 
-			T bean = getInterfaceMockImplementation(requiredType);
+			T bean = getInterfaceMockImplementation(requiredType, false);
 
 			if (null != bean)
 			{
@@ -268,8 +269,15 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		}
 	}
 
-	private <T> T getInterfaceMockImplementation(Class<T> requiredType)
+	private <T> T getInterfaceMockImplementation(Class<T> requiredType, boolean force)
 	{
+		BeanHolder beanHolder = beanOverrideMap.get(basePackage, requiredType);
+
+		if (null != beanHolder)
+		{
+			return requiredType.cast(beanHolder.getBean(new HashSet<>()));
+		}
+
 		try
 		{
 			Class<?> clazz = Class.forName(requiredType.getName());
@@ -280,7 +288,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				log.warn("Please implement " + requiredType.getName() + ", using empty mock instead");
 
 				T mock = requiredType.cast(Mockito.mock(clazz));
-				pushBean(clazz, mock, false);
+				pushBean(clazz, mock, force);
 
 				return mock;
 			}
