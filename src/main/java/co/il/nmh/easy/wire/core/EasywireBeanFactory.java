@@ -48,6 +48,7 @@ import co.il.nmh.easy.wire.core.utils.properties.PropertyManager.PropertyValue;
 import co.il.nmh.easy.wire.data.BasePackageMap;
 import co.il.nmh.easy.wire.data.BeanInformation;
 import co.il.nmh.easy.wire.data.OrderObject;
+import co.il.nmh.easy.wire.exception.EasywireBeanNotFoundException;
 import co.il.nmh.easy.wire.exception.EasywireException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -227,17 +228,13 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					{
 						return beanInformation.getBean(requiredType, classTrace);
 					}
-					catch (EasywireException e)
+					catch (EasywireBeanNotFoundException e)
 					{
-						if (e.getMessage().equals(String.format("couldn't find bean implementation for %s", requiredType)))
+						T bean = getInterfaceMockImplementation(requiredType, true);
+
+						if (null != bean)
 						{
-							T bean = getInterfaceMockImplementation(requiredType, true);
-
-							if (null != bean)
-							{
-								return bean;
-							}
-
+							return bean;
 						}
 
 						throw e;
@@ -265,7 +262,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				return bean;
 			}
 
-			throw new EasywireException("couldn't find bean implementation for {}", requiredType);
+			throw new EasywireBeanNotFoundException(requiredType);
 		}
 	}
 
@@ -402,7 +399,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 			}
 			catch (EasywireException e)
 			{
-				if (!e.getMessage().equals("couldn't find bean implementation for class " + implementingClass.getName()))
+				if (!(e instanceof EasywireBeanNotFoundException))
 				{
 					throw e;
 				}

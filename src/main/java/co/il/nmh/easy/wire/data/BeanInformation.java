@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import co.il.nmh.easy.wire.core.BeanHolder;
 import co.il.nmh.easy.wire.core.EasywireBeanFactory;
+import co.il.nmh.easy.wire.exception.EasywireBeanNotFoundException;
 import co.il.nmh.easy.wire.exception.EasywireException;
 import lombok.ToString;
 
@@ -113,7 +114,7 @@ public class BeanInformation
 
 			if (null == selectedBeanHolder)
 			{
-				throw new EasywireException("couldn't find bean implementation for {}", clazz);
+				throw new EasywireBeanNotFoundException(clazz);
 			}
 
 			primaryBeanHolderMap.put(clazz, selectedBeanHolder);
