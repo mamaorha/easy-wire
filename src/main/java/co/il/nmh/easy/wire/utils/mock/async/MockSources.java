@@ -53,7 +53,7 @@ public class MockSources implements IEasywireBaseInitializer
 				}
 			}
 		}
-		catch (Exception | NoClassDefFoundError e)
+		catch (Exception | NoClassDefFoundError | NoSuchMethodError e)
 		{
 		}
 	}
