@@ -37,49 +37,6 @@ public class EasywireRunner extends BlockJUnit4ClassRunner
 	public EasywireRunner(Class<?> clazz) throws InitializationError
 	{
 		super(clazz);
-
-		LoggerUtils.INSTANCE.overrideLoggerLevel("org.springframework", "INFO");
-		LoggerUtils.INSTANCE.overrideLoggerLevel("org.reflections.Reflections", "INFO");
-
-		EasywireProperties easywireProperties = clazz.getAnnotation(EasywireProperties.class);
-		loadProperties(easywireProperties, clazz);
-
-		String basePackage = EasywireBeanFactory.INSTANCE.getBasePackage();
-
-		if (!easywireInitializersByPackage.containsKey(basePackage))
-		{
-			easywireInitializersByPackage.put(basePackage, new HashSet<>());
-		}
-
-		loadBaseContextInitializers(basePackage);
-
-		Set<Class<?>> easywireInitializers = easywireInitializersByPackage.get(basePackage);
-
-		if (null != easywireProperties)
-		{
-			if (EasywireProperties.DEFAULT.class != easywireProperties.initializeClass())
-			{
-				if (!easywireInitializers.contains(easywireProperties.initializeClass()))
-				{
-					synchronized (easywireInitializers)
-					{
-						if (!easywireInitializers.contains(easywireProperties.initializeClass()))
-						{
-							EasywireBeanFactory.INSTANCE.getBean(easywireProperties.initializeClass(), false).initialize();
-							easywireInitializers.add(easywireProperties.initializeClass());
-						}
-					}
-				}
-			}
-
-			if (null != easywireProperties.loadBeans())
-			{
-				for (Class<?> bean : easywireProperties.loadBeans())
-				{
-					EasywireBeanFactory.INSTANCE.getBean(bean);
-				}
-			}
-		}
 	}
 
 	private void loadBaseContextInitializers(String basePackage)
@@ -158,6 +115,11 @@ public class EasywireRunner extends BlockJUnit4ClassRunner
 				basePackageBuilder.append(currBasePackage).append(",");
 			}
 
+			if (basePackageBuilder.length() > 0)
+			{
+				basePackageBuilder.delete(basePackageBuilder.length() - 1, basePackageBuilder.length());
+			}
+
 			String basePackage = null;
 
 			if (basePackages.length == 0)
@@ -225,6 +187,52 @@ public class EasywireRunner extends BlockJUnit4ClassRunner
 		if (null == testClassInstance)
 		{
 			testClassInstance = super.createTest();
+
+			Class<?> clazz = getTestClass().getJavaClass();
+
+			LoggerUtils.INSTANCE.overrideLoggerLevel("org.springframework", "INFO");
+			LoggerUtils.INSTANCE.overrideLoggerLevel("org.reflections.Reflections", "INFO");
+
+			EasywireProperties easywireProperties = clazz.getAnnotation(EasywireProperties.class);
+			loadProperties(easywireProperties, clazz);
+
+			String basePackage = EasywireBeanFactory.INSTANCE.getBasePackage();
+
+			if (!easywireInitializersByPackage.containsKey(basePackage))
+			{
+				easywireInitializersByPackage.put(basePackage, new HashSet<>());
+			}
+
+			loadBaseContextInitializers(basePackage);
+
+			Set<Class<?>> easywireInitializers = easywireInitializersByPackage.get(basePackage);
+
+			if (null != easywireProperties)
+			{
+				if (EasywireProperties.DEFAULT.class != easywireProperties.initializeClass())
+				{
+					if (!easywireInitializers.contains(easywireProperties.initializeClass()))
+					{
+						synchronized (easywireInitializers)
+						{
+							if (!easywireInitializers.contains(easywireProperties.initializeClass()))
+							{
+								EasywireBeanFactory.INSTANCE.getBean(easywireProperties.initializeClass(), false).initialize();
+								easywireInitializers.add(easywireProperties.initializeClass());
+							}
+						}
+					}
+				}
+
+				if (null != easywireProperties.loadBeans())
+				{
+					for (Class<?> bean : easywireProperties.loadBeans())
+					{
+						EasywireBeanFactory.INSTANCE.getBean(bean);
+					}
+				}
+			}
+
 			EasywireBeanFactory.INSTANCE.initBean(testClassInstance, false, false, new LinkedHashSet<>());
 		}
 
