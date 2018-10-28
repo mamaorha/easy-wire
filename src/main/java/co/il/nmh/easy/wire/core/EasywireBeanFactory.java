@@ -248,7 +248,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				}
 			}
 
-			if (!beanOnly)
+			if (!beanOnly && !requiredType.isInterface())
 			{
 				T insatnce = initializeClass(requiredType, beanOnly, classTrace);
 
