@@ -1,8 +1,10 @@
 package co.il.nmh.easy.wire.core;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Set;
 
 import org.mockito.Mockito;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.Order;
 
+import co.il.nmh.easy.wire.data.TypeWithAnnotation;
 import co.il.nmh.easy.wire.exception.EasywireException;
 import co.il.nmh.easy.wire.utils.ClassHelper;
 
@@ -202,7 +205,10 @@ public class BeanHolder
 
 				try
 				{
-					parameters = ClassHelper.buildMethodParameters(method.getGenericParameterTypes(), beanOnly, classTrace);
+					Type[] genericParameterTypes = method.getGenericParameterTypes();
+					Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+
+					parameters = ClassHelper.buildMethodParameters(TypeWithAnnotation.build(genericParameterTypes, parameterAnnotations), beanOnly, classTrace);
 				}
 				catch (Exception e)
 				{

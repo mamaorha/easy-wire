@@ -1,10 +1,13 @@
 package co.il.nmh.easy.wire.utils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Set;
 
 import co.il.nmh.easy.wire.core.EasywireBeanFactory;
+import co.il.nmh.easy.wire.data.TypeWithAnnotation;
 import co.il.nmh.easy.wire.exception.EasywireException;
 
 /**
@@ -30,7 +33,10 @@ public class ClassHelper
 		{
 			try
 			{
-				objects = buildMethodParameters(constructor.getGenericParameterTypes(), beanOnly, classTrace);
+				Type[] genericParameterTypes = constructor.getGenericParameterTypes();
+				Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
+
+				objects = buildMethodParameters(TypeWithAnnotation.build(genericParameterTypes, parameterAnnotations), beanOnly, classTrace);
 				validConstructor = constructor;
 
 				break;
@@ -58,15 +64,15 @@ public class ClassHelper
 		}
 	}
 
-	public static Object[] buildMethodParameters(Type[] parameterTypes, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
+	public static Object[] buildMethodParameters(List<TypeWithAnnotation> typesWithAnnotation, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
-		Object[] objects = new Object[parameterTypes.length];
+		Object[] objects = new Object[typesWithAnnotation.size()];
 
-		for (int i = 0; i < parameterTypes.length; i++)
+		for (int i = 0; i < typesWithAnnotation.size(); i++)
 		{
-			Type parameter = parameterTypes[i];
+			TypeWithAnnotation typeWithAnnotation = typesWithAnnotation.get(i);
 
-			Object beanByType = EasywireBeanFactory.INSTANCE.getBeanByType(parameter, beanOnly, classTrace);
+			Object beanByType = EasywireBeanFactory.INSTANCE.getBeanByType(typeWithAnnotation, beanOnly, classTrace);
 
 			objects[i] = beanByType;
 		}

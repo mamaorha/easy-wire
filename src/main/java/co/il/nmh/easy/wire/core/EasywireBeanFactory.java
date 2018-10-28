@@ -48,6 +48,7 @@ import co.il.nmh.easy.wire.core.utils.properties.PropertyManager.PropertyValue;
 import co.il.nmh.easy.wire.data.BasePackageMap;
 import co.il.nmh.easy.wire.data.BeanInformation;
 import co.il.nmh.easy.wire.data.OrderObject;
+import co.il.nmh.easy.wire.data.TypeWithAnnotation;
 import co.il.nmh.easy.wire.exception.EasywireBeanNotFoundException;
 import co.il.nmh.easy.wire.exception.EasywireException;
 import lombok.extern.slf4j.Slf4j;
@@ -784,7 +785,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 			else
 			{
-				Object beanByType = getBeanByType(genericType, beanOnly, classTrace);
+				TypeWithAnnotation typeWithAnnotation = new TypeWithAnnotation(genericType, field.getAnnotations());
+
+				Object beanByType = getBeanByType(typeWithAnnotation, beanOnly, classTrace);
 				fieldsInvestigator.setFieldValue(field, bean, beanByType);
 			}
 		}
@@ -792,25 +795,32 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private <T> void handleQualifier(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace, String qualifierValue)
 	{
-		List<?> beans = getBeans(field.getType(), beanOnly, classTrace);
+		Object qualifierBean = getQualifierBean(field.getType(), beanOnly, classTrace, qualifierValue);
+		fieldsInvestigator.setFieldValue(field, bean, qualifierBean);
+	}
+
+	private <T> T getQualifierBean(Class<T> clazz, boolean beanOnly, Set<Class<?>> classTrace, String qualifierValue)
+	{
+		List<?> beans = getBeans(clazz, beanOnly, classTrace);
 
 		for (Object currBean : beans)
 		{
 			if (currBean.getClass().getSimpleName().toLowerCase().equals(qualifierValue.toLowerCase()))
 			{
-				fieldsInvestigator.setFieldValue(field, bean, currBean);
-				return;
+				return clazz.cast(currBean);
 			}
 		}
 
 		throw new EasywireException("failed to find matching beans with Qualifier value {}", qualifierValue);
 	}
 
-	public Object getBeanByType(Type fieldType, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
+	public Object getBeanByType(TypeWithAnnotation typeWithAnnotation, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
 	{
-		if (fieldType instanceof Class)
+		Type type = typeWithAnnotation.getType();
+
+		if (type instanceof Class)
 		{
-			Class<?> clazz = (Class<?>) fieldType;
+			Class<?> clazz = (Class<?>) type;
 
 			if (ClassUtils.isPrimitiveOrWrapper(clazz))
 			{
@@ -819,9 +829,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		}
 
 		// handle list - need to get all implementing beans
-		if (fieldType instanceof ParameterizedType)
+		if (type instanceof ParameterizedType)
 		{
-			ParameterizedType parameterizedField = (ParameterizedType) fieldType;
+			ParameterizedType parameterizedField = (ParameterizedType) type;
 			Type[] actualTypeArguments = parameterizedField.getActualTypeArguments();
 
 			if (actualTypeArguments.length > 0)
@@ -851,9 +861,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					{
 						try
 						{
-							Object optionalBean = getBeanByType(actualTypeArguments[0], beanOnly, classTrace);
+							TypeWithAnnotation tempTypeWithAnnotation = new TypeWithAnnotation(actualTypeArguments[0], typeWithAnnotation.getAnnotationsMap());
 
-							// Object optionalBean = getBean(Class.forName(typeName), beanOnly, classTrace);
+							Object optionalBean = getBeanByType(tempTypeWithAnnotation, beanOnly, classTrace);
 
 							if (!Mockito.mockingDetails(optionalBean).isMock())
 							{
@@ -911,7 +921,14 @@ public class EasywireBeanFactory extends BeanFactoryStub
 			}
 		}
 
-		return getBean(Class.forName(fieldType.getTypeName()), beanOnly, classTrace);
+		Qualifier qualifier = typeWithAnnotation.getAnnotation(Qualifier.class);
+
+		if (null != qualifier)
+		{
+			return getQualifierBean(Class.forName(type.getTypeName()), beanOnly, classTrace, qualifier.value());
+		}
+
+		return getBean(Class.forName(type.getTypeName()), beanOnly, classTrace);
 	}
 
 	public void overrideLogger(Class<?> clazz)
