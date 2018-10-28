@@ -675,29 +675,30 @@ public class EasywireBeanFactory extends BeanFactoryStub
 			}
 
 			String strProperty = propertyValue.getValue();
+			String fieldTypeName = field.getType().getSimpleName();
 
 			if (field.getType() == String.class)
 			{
 				fieldsInvestigator.setFieldValue(field, bean, strProperty);
 			}
 
-			else if (field.getType() == Long.class)
+			else if (field.getType() == Long.class || "long".equals(fieldTypeName))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, Long.valueOf(strProperty));
 			}
-			else if (field.getType() == Integer.class)
+			else if (field.getType() == Integer.class || "int".equals(fieldTypeName))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, Integer.valueOf(strProperty));
 			}
-			else if (field.getType() == Double.class)
+			else if (field.getType() == Double.class || "double".equals(fieldTypeName))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, Double.valueOf(strProperty));
 			}
-			else if (field.getType() == Float.class)
+			else if (field.getType() == Float.class || "float".equals(fieldTypeName))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, Float.valueOf(strProperty));
 			}
-			else if (field.getType() == Boolean.class)
+			else if (field.getType() == Boolean.class || "boolean".equals(fieldTypeName))
 			{
 				fieldsInvestigator.setFieldValue(field, bean, Boolean.valueOf(strProperty));
 			}

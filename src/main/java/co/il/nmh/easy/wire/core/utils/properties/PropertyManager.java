@@ -127,11 +127,16 @@ public class PropertyManager
 			}
 
 			value = value.trim();
-			String result = properties.getProperty(value, defaultValue);
+
+			Object result = properties.getOrDefault(value, defaultValue);
 
 			propertyValue = new PropertyValue();
 			propertyValue.setKey(value);
-			propertyValue.setValue(result);
+
+			if (null != result)
+			{
+				propertyValue.setValue(String.valueOf(result));
+			}
 		}
 
 		return propertyValue;
