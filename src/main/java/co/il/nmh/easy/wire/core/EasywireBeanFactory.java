@@ -238,7 +238,10 @@ public class EasywireBeanFactory extends BeanFactoryStub
 							return bean;
 						}
 
-						throw e;
+						if (beanOnly)
+						{
+							throw e;
+						}
 					}
 				}
 
