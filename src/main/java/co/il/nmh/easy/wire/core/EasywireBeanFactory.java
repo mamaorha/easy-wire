@@ -772,7 +772,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		if (javaxAvailable && (field.getType() == BeanProvider.class || field.getType() == Provider.class))
 		{
 			Class<?> clazz = Class.forName(((ParameterizedType) (field.getGenericType())).getActualTypeArguments()[0].getTypeName());
-			fieldsInvestigator.setFieldValue(field, bean, BeanProvider.getBeanProviderObject(clazz));
+			fieldsInvestigator.setFieldValue(field, bean, BeanProvider.getBeanProviderObject(clazz, beanOnly));
 		}
 
 		else
@@ -855,7 +855,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 					if ("javax.inject.Provider".equals(rawType.getTypeName()))
 					{
-						return BeanProvider.getBeanProviderObject(Class.forName(typeName));
+						return BeanProvider.getBeanProviderObject(Class.forName(typeName), beanOnly);
 					}
 
 					else if ("java.util.Optional".equals(rawType.getTypeName()))
