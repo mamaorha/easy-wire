@@ -32,6 +32,7 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -497,6 +498,11 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		{
 			throw new EasywireException(e);
 		}
+	}
+
+	public <T> void handleConfigurationProperties(T bean, ConfigurationProperties configurationProperties) throws BindException
+	{
+		propertyManager.handleConfigurationProperties(bean, configurationProperties);
 	}
 
 	private <T> void populateFields(T bean, boolean beanOnly, Set<Class<?>> classTrace)

@@ -59,7 +59,11 @@ public class PropertyManager
 	public <T> void handleConfigurationProperties(T bean) throws BindException
 	{
 		ConfigurationProperties configurationProperties = bean.getClass().getAnnotation(ConfigurationProperties.class);
+		handleConfigurationProperties(bean, configurationProperties);
+	}
 
+	public <T> void handleConfigurationProperties(T bean, ConfigurationProperties configurationProperties) throws BindException
+	{
 		if (null != configurationProperties && null != propertySources)
 		{
 			String prefix = configurationProperties.prefix();

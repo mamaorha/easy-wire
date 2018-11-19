@@ -10,6 +10,7 @@ import java.util.Set;
 import org.mockito.Mockito;
 import org.mockito.cglib.proxy.MethodInterceptor;
 import org.mockito.cglib.proxy.MethodProxy;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -266,6 +267,13 @@ public class BeanHolder
 					if (method.isAnnotationPresent(Bean.class))
 					{
 						EasywireBeanFactory.INSTANCE.initBean(intercept, beanOnly, false, classTrace);
+
+						ConfigurationProperties configurationProperties = method.getAnnotation(ConfigurationProperties.class);
+
+						if (null != configurationProperties)
+						{
+							EasywireBeanFactory.INSTANCE.handleConfigurationProperties(intercept, configurationProperties);
+						}
 					}
 
 					return intercept;
