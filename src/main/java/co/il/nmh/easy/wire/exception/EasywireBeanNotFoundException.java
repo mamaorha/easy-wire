@@ -13,4 +13,9 @@ public class EasywireBeanNotFoundException extends EasywireException
 	{
 		super("couldn't find bean implementation for {}", clazz);
 	}
+
+	public EasywireBeanNotFoundException(String name)
+	{
+		super("couldn't find bean with name {}", name);
+	}
 }

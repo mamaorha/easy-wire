@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,7 +66,8 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private String basePackage = null;
 	private BasePackageMap<BeanHolder> beanOverrideMap;
-	private BasePackageMap<Boolean> prepareMap;
+	private Map<String, Map<String, BeanHolder>> beanNameOverrideMap;
+	// private BasePackageMap<Boolean> prepareMap;
 	private Map<Class<?>, Boolean> beanInfoMap; // class -> is bean annotated
 	private ReflectionManager reflectionManager;
 	private PropertyManager propertyManager;
@@ -76,8 +78,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	public EasywireBeanFactory()
 	{
 		beanOverrideMap = new BasePackageMap<>();
+		beanNameOverrideMap = new ConcurrentHashMap<>();
 		beanInfoMap = new ConcurrentHashMap<>();
-		prepareMap = new BasePackageMap<>();
+		// prepareMap = new BasePackageMap<>();
 		reflectionManager = new ReflectionManager();
 		propertyManager = new PropertyManager();
 
@@ -92,7 +95,8 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		if (null != basePackage)
 		{
 			beanOverrideMap.remove(basePackage);
-			prepareMap.remove(basePackage);
+			beanNameOverrideMap.remove(basePackage);
+			// prepareMap.remove(basePackage);
 
 			Map<Class<?>, BeanInformation> beans = reflectionManager.getBeans(basePackage);
 
@@ -152,6 +156,12 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		pushBean(LoggerTest.class, loggerTest, false);
 	}
 
+	public void overrideBean(String beanName, Class<?> overridingClass)
+	{
+		Object bean = initializeClass(overridingClass, false, new LinkedHashSet<>());
+		pushBean(beanName, bean);
+	}
+
 	public void overrideBean(Class<?> clazz, Class<?> overridingClass)
 	{
 		Object bean = initializeClass(overridingClass, false, new LinkedHashSet<>());
@@ -178,6 +188,16 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		}
 	}
 
+	public void pushBean(String name, Object bean)
+	{
+		if (!beanNameOverrideMap.containsKey(basePackage))
+		{
+			beanNameOverrideMap.put(basePackage, new ConcurrentHashMap<>());
+		}
+
+		beanNameOverrideMap.get(basePackage).put(name, new BeanHolder(bean, null));
+	}
+
 	@Override
 	public <T> T getBean(Class<T> requiredType)
 	{
@@ -195,7 +215,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		{
 			Map<Class<?>, BeanInformation> beansMap = reflectionManager.getBeans(basePackage);
 
-			prepare(beansMap, requiredType);
+			// prepare(beansMap, requiredType);
 
 			BeanHolder beanHolder = beanOverrideMap.get(basePackage, requiredType);
 
@@ -271,6 +291,39 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		}
 	}
 
+	@Override
+	public Object getBean(String name) throws BeansException
+	{
+		synchronized (this)
+		{
+			if (beanNameOverrideMap.containsKey(basePackage))
+			{
+				BeanHolder beanHolder = beanNameOverrideMap.get(basePackage).get(name);
+
+				if (null != beanHolder)
+				{
+					return beanHolder.getBean(new HashSet<>());
+				}
+			}
+
+			Map<String, List<BeanInformation>> beansByName = reflectionManager.getBeansByName(basePackage);
+
+			if (null != beansByName && beansByName.containsKey(name))
+			{
+				List<BeanInformation> beanInformations = beansByName.get(name);
+
+				if (beanInformations.size() > 1)
+				{
+					throw new EasywireException(String.format("bean named %s exist more than once, %s", name, beanInformations));
+				}
+
+				return beanInformations.get(0).getBean(new HashSet<>());
+			}
+
+			throw new EasywireBeanNotFoundException(name);
+		}
+	}
+
 	private <T> T getInterfaceMockImplementation(Class<T> requiredType, boolean force)
 	{
 		BeanHolder beanHolder = beanOverrideMap.get(basePackage, requiredType);
@@ -302,71 +355,72 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		return null;
 	}
 
-	private void prepare(Map<Class<?>, BeanInformation> beansMap, Class<?> requiredType)
-	{
-		if (prepareMap.containsKey(basePackage, requiredType))
-		{
-			return;
-		}
-
-		prepareMap.put(basePackage, requiredType, Boolean.TRUE);
-
-		if (!beanOverrideMap.containsKey(basePackage, requiredType))
-		{
-			// check by interfaces
-			Class<?> temp = requiredType;
-			boolean found = false;
-
-			do
-			{
-				Class<?>[] interfaces = temp.getInterfaces();
-
-				for (Class<?> clazz : interfaces)
-				{
-					if (beanOverrideMap.containsKey(basePackage, clazz))
-					{
-						BeanHolder beanHolder = beanOverrideMap.get(basePackage, clazz);
-						beanOverrideMap.put(basePackage, requiredType, beanHolder);
-
-						found = true;
-						break;
-					}
-
-					if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
-					{
-						BeanInformation beanInformation = beansMap.get(clazz);
-						beansMap.put(requiredType, beanInformation);
-					}
-				}
-
-				temp = temp.getSuperclass();
-			} while (!found && null != temp);
-
-			if (!found)
-			{
-				// check by implementations
-				List<Class<?>> findImplementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
-
-				for (Class<?> clazz : findImplementingClasses)
-				{
-					if (beanOverrideMap.containsKey(basePackage, clazz))
-					{
-						BeanHolder beanHolder = beanOverrideMap.get(basePackage, clazz);
-						beanOverrideMap.put(basePackage, requiredType, beanHolder);
-
-						found = true;
-						break;
-					}
-
-					if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
-					{
-						BeanInformation beanInformation = beansMap.get(clazz);
-						beansMap.put(requiredType, beanInformation);
-					}
-				}
-			}
-		}
-	}
+	// private void prepare(Map<Class<?>, BeanInformation> beansMap, Class<?> requiredType)
+	// {
+	// if (prepareMap.containsKey(basePackage, requiredType))
+	// {
+	// return;
+	// }
+	//
+	// prepareMap.put(basePackage, requiredType, Boolean.TRUE);
+	//
+	// if (!beanOverrideMap.containsKey(basePackage, requiredType))
+	// {
+	// // check by interfaces
+	// Class<?> temp = requiredType;
+	// boolean found = false;
+	//
+	// do
+	// {
+	// Class<?>[] interfaces = temp.getInterfaces();
+	//
+	// for (Class<?> clazz : interfaces)
+	// {
+	// if (beanOverrideMap.containsKey(basePackage, clazz))
+	// {
+	// BeanHolder beanHolder = beanOverrideMap.get(basePackage, clazz);
+	//
+	// beanOverrideMap.put(basePackage, requiredType, beanHolder);
+	//
+	// found = true;
+	// break;
+	// }
+	//
+	// if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
+	// {
+	// BeanInformation beanInformation = beansMap.get(clazz);
+	// beansMap.put(requiredType, beanInformation);
+	// }
+	// }
+	//
+	// temp = temp.getSuperclass();
+	// } while (!found && null != temp);
+	//
+	// if (!found)
+	// {
+	// // check by implementations
+	// List<Class<?>> findImplementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
+	//
+	// for (Class<?> clazz : findImplementingClasses)
+	// {
+	// if (beanOverrideMap.containsKey(basePackage, clazz))
+	// {
+	// BeanHolder beanHolder = beanOverrideMap.get(basePackage, clazz);
+	// beanOverrideMap.put(basePackage, requiredType, beanHolder);
+	//
+	// found = true;
+	// break;
+	// }
+	//
+	// if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
+	// {
+	// BeanInformation beanInformation = beansMap.get(clazz);
+	// beansMap.put(requiredType, beanInformation);
+	// }
+	// }
+	// }
+	// }
+	// }
 
 	public <T> List<T> getBeans(Class<T> requiredType, boolean beanOnly, Set<Class<?>> classTrace)
 	{
@@ -805,23 +859,15 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private <T> void handleQualifier(T bean, Field field, boolean beanOnly, Set<Class<?>> classTrace, String qualifierValue)
 	{
-		Object qualifierBean = getQualifierBean(field.getType(), beanOnly, classTrace, qualifierValue);
-		fieldsInvestigator.setFieldValue(field, bean, qualifierBean);
-	}
-
-	private <T> T getQualifierBean(Class<T> clazz, boolean beanOnly, Set<Class<?>> classTrace, String qualifierValue)
-	{
-		List<?> beans = getBeans(clazz, beanOnly, classTrace);
-
-		for (Object currBean : beans)
+		try
 		{
-			if (currBean.getClass().getSimpleName().toLowerCase().equals(qualifierValue.toLowerCase()))
-			{
-				return clazz.cast(currBean);
-			}
+			Object qualifierBean = getBean(qualifierValue);
+			fieldsInvestigator.setFieldValue(field, bean, qualifierBean);
 		}
-
-		throw new EasywireException("failed to find matching beans with Qualifier value {}", qualifierValue);
+		catch (EasywireBeanNotFoundException e)
+		{
+			throw new EasywireException("failed to find matching beans with Qualifier value {}", qualifierValue);
+		}
 	}
 
 	public Object getBeanByType(TypeWithAnnotation typeWithAnnotation, boolean beanOnly, Set<Class<?>> classTrace) throws ClassNotFoundException
@@ -935,7 +981,14 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 		if (null != qualifier)
 		{
-			return getQualifierBean(Class.forName(type.getTypeName()), beanOnly, classTrace, qualifier.value());
+			try
+			{
+				return getBean(qualifier.value());
+			}
+			catch (EasywireBeanNotFoundException e)
+			{
+				throw new EasywireException("failed to find matching beans with Qualifier value {}", qualifier.value());
+			}
 		}
 
 		return getBean(Class.forName(type.getTypeName()), beanOnly, classTrace);

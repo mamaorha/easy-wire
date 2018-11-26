@@ -17,6 +17,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -37,12 +38,14 @@ public class ReflectionManager
 {
 	private Map<String, Reflections> reflectionsByPackageMap;
 	private Map<String, Map<Class<?>, BeanInformation>> packageBeanInformationMap; // basePackage -> class -> bean information
+	private Map<String, Map<String, List<BeanInformation>>> packageBeansByNameMap; // basePackage -> bean name -> bean information
 	private Map<String, Map<Class<?>, List<Class<?>>>> implementingClassesMapByPackage; // cache for the search - basePackage -> class -> implementing beans
 
 	public ReflectionManager()
 	{
 		reflectionsByPackageMap = new ConcurrentHashMap<>();
 		packageBeanInformationMap = new ConcurrentHashMap<>();
+		packageBeansByNameMap = new ConcurrentHashMap<>();
 		implementingClassesMapByPackage = new ConcurrentHashMap<>();
 	}
 
@@ -88,13 +91,18 @@ public class ReflectionManager
 					{
 					}
 
+					Map<String, List<BeanInformation>> beansByNames = new HashMap<>();
+
 					Map<Class<?>, BeanInformation> beanInformationMap = new HashMap<>();
 
 					for (Class<?> beanClass : beans)
 					{
 						if (!beanInformationMap.containsKey(beanClass))
 						{
-							beanInformationMap.put(beanClass, new BeanInformation(beanClass));
+							BeanInformation beanInformation = new BeanInformation(beanClass);
+							beanInformationMap.put(beanClass, beanInformation);
+
+							saveBeanName(beanClass, beansByNames, beanInformation);
 						}
 					}
 
@@ -107,10 +115,14 @@ public class ReflectionManager
 							beanInformationMap.put(returnType, new BeanInformation(returnType));
 						}
 
-						beanInformationMap.get(returnType).addMethod(beanMethod);
+						BeanInformation beanInformation = beanInformationMap.get(returnType);
+						beanInformation.addMethod(beanMethod);
+
+						saveBeanName(beanMethod, beansByNames, beanInformation);
 					}
 
 					packageBeanInformationMap.put(basePackage, beanInformationMap);
+					packageBeansByNameMap.put(basePackage, beansByNames);
 				}
 			}
 		}
@@ -197,5 +209,163 @@ public class ReflectionManager
 		}
 
 		return reflectionsByPackageMap.get(basePackage);
+	}
+
+	private void saveBeanName(Object object, Map<String, List<BeanInformation>> beansByNames, BeanInformation beanInformation)
+	{
+		String beanName = null;
+
+		if (object instanceof Class<?>)
+		{
+			Class<?> clazz = (Class<?>) object;
+			beanName = getClassBeanName(clazz);
+
+			if (null == beanName || beanName.isEmpty())
+			{
+				beanName = clazz.getSimpleName();
+				beanName = Character.toLowerCase(beanName.charAt(0)) + beanName.substring(1, beanName.length());
+			}
+		}
+
+		else if (object instanceof Method)
+		{
+			Method method = (Method) object;
+			String[] beanNames = getMethodBeanName(method);
+
+			if (null == beanNames || beanNames.length < 1)
+			{
+				beanName = method.getName();
+				beanName = Character.toLowerCase(beanName.charAt(0)) + beanName.substring(1, beanName.length());
+			}
+			else
+			{
+				for (String name : beanNames)
+				{
+					if (!beansByNames.containsKey(name))
+					{
+						beansByNames.put(name, new ArrayList<>());
+					}
+
+					beansByNames.get(name).add(beanInformation);
+				}
+
+				return;
+			}
+		}
+
+		if (!beansByNames.containsKey(beanName))
+		{
+			beansByNames.put(beanName, new ArrayList<>());
+		}
+
+		beansByNames.get(beanName).add(beanInformation);
+	}
+
+	private String getClassBeanName(Class<?> clazz)
+	{
+		try
+		{
+			Qualifier qualifier = clazz.getAnnotation(Qualifier.class);
+
+			if (null != qualifier)
+			{
+				return qualifier.value();
+			}
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		try
+		{
+			Named named = clazz.getAnnotation(Named.class);
+
+			if (null != named)
+			{
+				return named.value();
+			}
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		try
+		{
+			RestController restController = clazz.getAnnotation(RestController.class);
+
+			if (null != restController)
+			{
+				return restController.value();
+			}
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		try
+		{
+			Component component = clazz.getAnnotation(Component.class);
+
+			if (null != component)
+			{
+				return component.value();
+			}
+
+			Controller controller = clazz.getAnnotation(Controller.class);
+
+			if (null != controller)
+			{
+				return controller.value();
+			}
+
+			Repository repository = clazz.getAnnotation(Repository.class);
+
+			if (null != repository)
+			{
+				return repository.value();
+			}
+
+			Service service = clazz.getAnnotation(Service.class);
+
+			if (null != service)
+			{
+				return service.value();
+			}
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		return null;
+	}
+
+	private String[] getMethodBeanName(Method method)
+	{
+		try
+		{
+			Qualifier qualifier = method.getAnnotation(Qualifier.class);
+
+			if (null != qualifier)
+			{
+				return new String[] { qualifier.value() };
+			}
+		}
+		catch (NoClassDefFoundError e)
+		{
+		}
+
+		Bean bean = method.getAnnotation(Bean.class);
+
+		if (null != bean)
+		{
+			return bean.name();
+		}
+
+		return null;
+	}
+
+	public Map<String, List<BeanInformation>> getBeansByName(String basePackage)
+	{
+		return packageBeansByNameMap.get(basePackage);
 	}
 }
