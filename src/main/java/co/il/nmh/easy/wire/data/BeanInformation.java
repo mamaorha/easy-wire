@@ -109,7 +109,7 @@ public class BeanInformation
 
 			if (!hasPrimary && matches > 1)
 			{
-				throw new EasywireException("bean {} has more than one implementation, please define one of them as primary");
+				throw new EasywireException("bean {} has more than one implementation, please define one of them as primary", clazz);
 			}
 
 			if (null == selectedBeanHolder)

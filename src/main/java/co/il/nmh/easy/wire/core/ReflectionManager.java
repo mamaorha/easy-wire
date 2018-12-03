@@ -102,7 +102,7 @@ public class ReflectionManager
 							BeanInformation beanInformation = new BeanInformation(beanClass);
 							beanInformationMap.put(beanClass, beanInformation);
 
-							saveBeanName(beanClass, beansByNames, beanInformation);
+							saveBeanName(beanClass, beansByNames, new BeanInformation(beanClass));
 						}
 					}
 
@@ -118,7 +118,12 @@ public class ReflectionManager
 						BeanInformation beanInformation = beanInformationMap.get(returnType);
 						beanInformation.addMethod(beanMethod);
 
-						saveBeanName(beanMethod, beansByNames, beanInformation);
+						{
+							beanInformation = new BeanInformation(returnType);
+							beanInformation.addMethod(beanMethod);
+
+							saveBeanName(beanMethod, beansByNames, beanInformation);
+						}
 					}
 
 					packageBeanInformationMap.put(basePackage, beanInformationMap);

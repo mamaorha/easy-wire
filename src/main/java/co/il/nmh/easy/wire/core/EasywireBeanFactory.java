@@ -356,7 +356,8 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					throw new EasywireException(String.format("bean named %s exist more than once, %s", name, beanInformations));
 				}
 
-				return beanInformations.get(0).getBean(new HashSet<>());
+				BeanInformation beanInformation = beanInformations.get(0);
+				return beanInformation.getBean(new HashSet<>());
 			}
 
 			throw new EasywireBeanNotFoundException(name);
