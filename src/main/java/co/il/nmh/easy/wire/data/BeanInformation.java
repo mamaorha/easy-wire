@@ -176,4 +176,18 @@ public class BeanInformation
 	{
 		return getBeanHolder(clazz, new LinkedHashSet<>()).isLoaded();
 	}
+
+	public Set<BeanHolder> getAllImplementations()
+	{
+		init(new HashSet<>());
+
+		Set<BeanHolder> allImplementations = new HashSet<>();
+
+		for (Set<BeanHolder> beanHolders : beanHolderMap.values())
+		{
+			allImplementations.addAll(beanHolders);
+		}
+
+		return allImplementations;
+	}
 }

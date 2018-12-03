@@ -67,7 +67,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	private String basePackage = null;
 	private BasePackageMap<BeanHolder> beanOverrideMap;
 	private Map<String, Map<String, BeanHolder>> beanNameOverrideMap;
-	// private BasePackageMap<Boolean> prepareMap;
+	private BasePackageMap<Boolean> prepareMap;
 	private Map<Class<?>, Boolean> beanInfoMap; // class -> is bean annotated
 	private ReflectionManager reflectionManager;
 	private PropertyManager propertyManager;
@@ -80,7 +80,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		beanOverrideMap = new BasePackageMap<>();
 		beanNameOverrideMap = new ConcurrentHashMap<>();
 		beanInfoMap = new ConcurrentHashMap<>();
-		// prepareMap = new BasePackageMap<>();
+		prepareMap = new BasePackageMap<>();
 		reflectionManager = new ReflectionManager();
 		propertyManager = new PropertyManager();
 
@@ -96,7 +96,7 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		{
 			beanOverrideMap.remove(basePackage);
 			beanNameOverrideMap.remove(basePackage);
-			// prepareMap.remove(basePackage);
+			prepareMap.remove(basePackage);
 
 			Map<Class<?>, BeanInformation> beans = reflectionManager.getBeans(basePackage);
 
@@ -272,23 +272,62 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				}
 			}
 
-			if (!beanOnly && !requiredType.isInterface())
+			if (!prepareMap.containsKey(basePackage, requiredType))
 			{
-				T insatnce = initializeClass(requiredType, beanOnly, classTrace);
+				prepareMap.put(basePackage, requiredType, Boolean.TRUE);
 
-				pushBean(requiredType, insatnce);
-				return insatnce;
+				Class<?> temp = requiredType;
+
+				do
+				{
+					Class<?>[] interfaces = temp.getInterfaces();
+
+					for (Class<?> clazz : interfaces)
+					{
+						try
+						{
+							if (beanOverrideMap.containsKey(basePackage, clazz))
+							{
+								beanHolder = beanOverrideMap.get(basePackage, clazz);
+								beanOverrideMap.put(basePackage, requiredType, beanHolder);
+
+								return requiredType.cast(beanHolder.getBean(classTrace));
+							}
+
+							if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
+							{
+								beanInformation = beansMap.get(clazz);
+								beansMap.put(requiredType, beanInformation);
+
+								return requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+							}
+						}
+						catch (Exception e)
+						{
+						}
+					}
+
+					temp = temp.getSuperclass();
+				} while (null != temp);
 			}
-
-			T bean = getInterfaceMockImplementation(requiredType, false);
-
-			if (null != bean)
-			{
-				return bean;
-			}
-
-			throw new EasywireBeanNotFoundException(requiredType);
 		}
+
+		if (!beanOnly && !requiredType.isInterface())
+		{
+			T insatnce = initializeClass(requiredType, beanOnly, classTrace);
+
+			pushBean(requiredType, insatnce);
+			return insatnce;
+		}
+
+		T bean = getInterfaceMockImplementation(requiredType, false);
+
+		if (null != bean)
+		{
+			return bean;
+		}
+
+		throw new EasywireBeanNotFoundException(requiredType);
 	}
 
 	@Override
@@ -428,39 +467,60 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 		List<OrderObject> orderObjects = new ArrayList<>();
 
-		List<Class<?>> implementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
-
-		for (Class<?> implementingClass : implementingClasses)
+		if (beanOnly)
 		{
-			if (Modifier.isAbstract(implementingClass.getModifiers()))
-			{
-				continue;
-			}
+			BeanInformation beanInformation = beansMap.get(requiredType);
 
-			try
+			if (null != beanInformation)
 			{
-				int order = Integer.MAX_VALUE;
-				Object bean = getBean(implementingClass, beanOnly, classTrace);
+				Set<BeanHolder> allImplementations = beanInformation.getAllImplementations();
 
-				if (beanOverrideMap.containsKey(basePackage, bean.getClass()))
+				for (BeanHolder beanHolder : allImplementations)
 				{
-					BeanHolder beanHolder = beanOverrideMap.get(basePackage, bean.getClass());
-					order = beanHolder.getOrder();
+					Object bean = beanHolder.getBean(classTrace);
+					int order = beanInformation.order(bean.getClass());
+
+					orderObjects.add(new OrderObject(order, bean));
+				}
+			}
+		}
+
+		else
+		{
+			List<Class<?>> implementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
+
+			for (Class<?> implementingClass : implementingClasses)
+			{
+				if (Modifier.isAbstract(implementingClass.getModifiers()))
+				{
+					continue;
 				}
 
-				else
+				try
 				{
-					BeanInformation beanInformation = beansMap.get(implementingClass);
-					order = beanInformation.order(bean.getClass());
-				}
+					int order = Integer.MAX_VALUE;
+					Object bean = getBean(implementingClass, beanOnly, classTrace);
 
-				orderObjects.add(new OrderObject(order, bean));
-			}
-			catch (EasywireException e)
-			{
-				if (!(e instanceof EasywireBeanNotFoundException))
+					if (beanOverrideMap.containsKey(basePackage, bean.getClass()))
+					{
+						BeanHolder beanHolder = beanOverrideMap.get(basePackage, bean.getClass());
+						order = beanHolder.getOrder();
+					}
+
+					else
+					{
+						BeanInformation beanInformation = beansMap.get(implementingClass);
+						order = beanInformation.order(bean.getClass());
+					}
+
+					orderObjects.add(new OrderObject(order, bean));
+				}
+				catch (EasywireException e)
 				{
-					throw e;
+					if (!(e instanceof EasywireBeanNotFoundException))
+					{
+						throw e;
+					}
 				}
 			}
 		}
