@@ -272,52 +272,48 @@ public class EasywireBeanFactory extends BeanFactoryStub
 				}
 			}
 
-			if (!prepareMap.containsKey(basePackage, requiredType))
+			T bean = checkImplementationBeans(requiredType, classTrace, beansMap);
+
+			if (null != bean)
 			{
-				prepareMap.put(basePackage, requiredType, Boolean.TRUE);
+				return bean;
+			}
+		}
 
-				Class<?> temp = requiredType;
+		if (!beanOnly && !requiredType.isInterface())
+		{
+			T insatnce = initializeClass(requiredType, beanOnly, classTrace);
 
-				do
-				{
-					Class<?>[] interfaces = temp.getInterfaces();
+			pushBean(requiredType, insatnce);
+			return insatnce;
+		}
 
-					for (Class<?> clazz : interfaces)
-					{
-						try
-						{
-							if (beanOverrideMap.containsKey(basePackage, clazz))
-							{
-								beanHolder = beanOverrideMap.get(basePackage, clazz);
-								T bean = requiredType.cast(beanHolder.getBean(classTrace));
+		T bean = getInterfaceMockImplementation(requiredType, false);
 
-								beanOverrideMap.put(basePackage, requiredType, beanHolder);
+		if (null != bean)
+		{
+			return bean;
+		}
 
-								return bean;
-							}
+		throw new EasywireBeanNotFoundException(requiredType);
+	}
 
-							if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
-							{
-								beanInformation = beansMap.get(clazz);
-								T bean = requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+	private <T> T checkImplementationBeans(Class<T> requiredType, Set<Class<?>> classTrace, Map<Class<?>, BeanInformation> beansMap)
+	{
+		BeanHolder beanHolder;
+		BeanInformation beanInformation;
 
-								beansMap.put(requiredType, beanInformation);
+		if (!prepareMap.containsKey(basePackage, requiredType))
+		{
+			prepareMap.put(basePackage, requiredType, Boolean.TRUE);
 
-								return bean;
-							}
-						}
-						catch (Exception e)
-						{
-						}
-					}
+			Class<?> temp = requiredType;
 
-					temp = temp.getSuperclass();
-				} while (null != temp);
+			do
+			{
+				Class<?>[] interfaces = temp.getInterfaces();
 
-				// check by implementations
-				List<Class<?>> findImplementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
-
-				for (Class<?> clazz : findImplementingClasses)
+				for (Class<?> clazz : interfaces)
 				{
 					try
 					{
@@ -345,25 +341,44 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					{
 					}
 				}
+
+				temp = temp.getSuperclass();
+			} while (null != temp);
+
+			// check by implementations
+			List<Class<?>> findImplementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
+
+			for (Class<?> clazz : findImplementingClasses)
+			{
+				try
+				{
+					if (beanOverrideMap.containsKey(basePackage, clazz))
+					{
+						beanHolder = beanOverrideMap.get(basePackage, clazz);
+						T bean = requiredType.cast(beanHolder.getBean(classTrace));
+
+						beanOverrideMap.put(basePackage, requiredType, beanHolder);
+
+						return bean;
+					}
+
+					if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
+					{
+						beanInformation = beansMap.get(clazz);
+						T bean = requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+
+						beansMap.put(requiredType, beanInformation);
+
+						return bean;
+					}
+				}
+				catch (Exception e)
+				{
+				}
 			}
 		}
 
-		if (!beanOnly && !requiredType.isInterface())
-		{
-			T insatnce = initializeClass(requiredType, beanOnly, classTrace);
-
-			pushBean(requiredType, insatnce);
-			return insatnce;
-		}
-
-		T bean = getInterfaceMockImplementation(requiredType, false);
-
-		if (null != bean)
-		{
-			return bean;
-		}
-
-		throw new EasywireBeanNotFoundException(requiredType);
+		return null;
 	}
 
 	@Override
