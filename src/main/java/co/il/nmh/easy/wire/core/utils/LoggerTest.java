@@ -45,30 +45,38 @@ public class LoggerTest implements Logger
 	@Override
 	public void trace(String msg)
 	{
+		logs.get(Level.TRACE).add(msg);
 		log.trace(msg);
 	}
 
 	@Override
 	public void trace(String format, Object arg)
 	{
+		String message = format(format, arg);
+		logs.get(Level.TRACE).add(message);
 		log.trace(format, arg);
 	}
 
 	@Override
 	public void trace(String format, Object arg1, Object arg2)
 	{
+		String message = format(format, arg1, arg2);
+		logs.get(Level.TRACE).add(message);
 		log.trace(format, arg1, arg2);
 	}
 
 	@Override
 	public void trace(String format, Object... arguments)
 	{
+		String message = format(format, arguments);
+		logs.get(Level.TRACE).add(message);
 		log.trace(format, arguments);
 	}
 
 	@Override
 	public void trace(String msg, Throwable t)
 	{
+		logs.get(Level.WARN).add(msg);
 		log.trace(msg, t);
 	}
 
@@ -117,30 +125,38 @@ public class LoggerTest implements Logger
 	@Override
 	public void debug(String msg)
 	{
+		logs.get(Level.DEBUG).add(msg);
 		log.debug(msg);
 	}
 
 	@Override
 	public void debug(String format, Object arg)
 	{
+		String message = format(format, arg);
+		logs.get(Level.DEBUG).add(message);
 		log.debug(format, arg);
 	}
 
 	@Override
 	public void debug(String format, Object arg1, Object arg2)
 	{
+		String message = format(format, arg1, arg2);
+		logs.get(Level.DEBUG).add(message);
 		log.debug(format, arg1, arg2);
 	}
 
 	@Override
 	public void debug(String format, Object... arguments)
 	{
+		String message = format(format, arguments);
+		logs.get(Level.DEBUG).add(message);
 		log.debug(format, arguments);
 	}
 
 	@Override
 	public void debug(String msg, Throwable t)
 	{
+		logs.get(Level.DEBUG).add(msg);
 		log.debug(msg, t);
 	}
 
