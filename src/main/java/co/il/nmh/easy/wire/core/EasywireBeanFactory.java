@@ -289,17 +289,21 @@ public class EasywireBeanFactory extends BeanFactoryStub
 							if (beanOverrideMap.containsKey(basePackage, clazz))
 							{
 								beanHolder = beanOverrideMap.get(basePackage, clazz);
+								T bean = requiredType.cast(beanHolder.getBean(classTrace));
+
 								beanOverrideMap.put(basePackage, requiredType, beanHolder);
 
-								return requiredType.cast(beanHolder.getBean(classTrace));
+								return bean;
 							}
 
 							if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
 							{
 								beanInformation = beansMap.get(clazz);
+								T bean = requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+
 								beansMap.put(requiredType, beanInformation);
 
-								return requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+								return bean;
 							}
 						}
 						catch (Exception e)
@@ -309,6 +313,38 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 					temp = temp.getSuperclass();
 				} while (null != temp);
+
+				// check by implementations
+				List<Class<?>> findImplementingClasses = reflectionManager.findImplementingClasses(requiredType, basePackage);
+
+				for (Class<?> clazz : findImplementingClasses)
+				{
+					try
+					{
+						if (beanOverrideMap.containsKey(basePackage, clazz))
+						{
+							beanHolder = beanOverrideMap.get(basePackage, clazz);
+							T bean = requiredType.cast(beanHolder.getBean(classTrace));
+
+							beanOverrideMap.put(basePackage, requiredType, beanHolder);
+
+							return bean;
+						}
+
+						if (!beansMap.containsKey(requiredType) && beansMap.containsKey(clazz))
+						{
+							beanInformation = beansMap.get(clazz);
+							T bean = requiredType.cast(beanInformation.getBean(requiredType, classTrace));
+
+							beansMap.put(requiredType, beanInformation);
+
+							return bean;
+						}
+					}
+					catch (Exception e)
+					{
+					}
+				}
 			}
 		}
 
