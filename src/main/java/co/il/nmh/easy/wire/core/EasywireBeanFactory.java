@@ -107,6 +107,8 @@ public class EasywireBeanFactory extends BeanFactoryStub
 					beanInformation.clear();
 				}
 			}
+
+			pushBaseBeans();
 		}
 	}
 
@@ -151,6 +153,11 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 		this.basePackage = basePackage;
 
+		pushBaseBeans();
+	}
+
+	private void pushBaseBeans()
+	{
 		pushBean(ApplicationContext.class, this, false);
 		pushBean(FieldsInvestigator.class, fieldsInvestigator, false);
 		pushBean(LoggerTest.class, loggerTest, false);
