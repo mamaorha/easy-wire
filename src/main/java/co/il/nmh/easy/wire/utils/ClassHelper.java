@@ -2,6 +2,7 @@ package co.il.nmh.easy.wire.utils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +61,19 @@ public class ClassHelper
 		}
 		catch (Exception e)
 		{
-			throw new EasywireException("Failed to instanciate class {} with the following error: {}", clazz.getName(), e.getMessage());
+			String error = e.getMessage();
+
+			if (null == error && e instanceof InvocationTargetException)
+			{
+				InvocationTargetException invocationTargetException = ((InvocationTargetException) e);
+
+				if (null != invocationTargetException.getTargetException())
+				{
+					error = invocationTargetException.getTargetException().getMessage();
+				}
+			}
+
+			throw new EasywireException("Failed to instanciate class {} with the following error: {}", clazz.getName(), error);
 		}
 	}
 
