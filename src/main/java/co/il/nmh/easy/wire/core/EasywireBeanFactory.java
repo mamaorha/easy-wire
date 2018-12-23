@@ -33,11 +33,13 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.BindException;
 
@@ -1139,9 +1141,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	}
 
 	@Override
-	public Environment getEnvironment()
+	public ConfigurableEnvironment getEnvironment()
 	{
-		return getBean(Environment.class);
+		return getBean(ConfigurableEnvironment.class);
 	}
 
 	public Reflections getReflections()
@@ -1152,5 +1154,23 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	public String getBasePackage()
 	{
 		return basePackage;
+	}
+
+	public MutablePropertySources getPropertySources()
+	{
+		return propertyManager.getPropertySources();
+	}
+
+	@Override
+	public ConfigurableListableBeanFactory getBeanFactory() throws IllegalStateException
+	{
+		return this;
+	}
+
+	@Override
+	public void registerSingleton(String beanName, Object singletonObject)
+	{
+		pushBean(singletonObject.getClass(), singletonObject);
+		pushBean(beanName, singletonObject);
 	}
 }

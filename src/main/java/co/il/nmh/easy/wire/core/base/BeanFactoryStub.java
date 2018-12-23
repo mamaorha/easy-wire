@@ -1,21 +1,43 @@
 package co.il.nmh.easy.wire.core.base;
 
+import java.beans.PropertyEditor;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.security.AccessControlContext;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.PropertyEditorRegistrar;
+import org.springframework.beans.PropertyEditorRegistry;
+import org.springframework.beans.TypeConverter;
+import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanExpressionResolver;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.config.DependencyDescriptor;
+import org.springframework.beans.factory.config.NamedBeanHolder;
+import org.springframework.beans.factory.config.Scope;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.core.ResolvableType;
-import org.springframework.core.env.Environment;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.io.ProtocolResolver;
 import org.springframework.core.io.Resource;
+import org.springframework.util.StringValueResolver;
 
 /**
  * @author Maor Hamami
@@ -23,7 +45,7 @@ import org.springframework.core.io.Resource;
  *         This class only exist so the EasywireBeanFactory class will look more clean
  */
 
-public class BeanFactoryStub implements BeanFactory, ApplicationContext
+public class BeanFactoryStub implements ConfigurableListableBeanFactory, ConfigurableApplicationContext
 {
 	@Override
 	public Object getBean(String name) throws BeansException
@@ -93,12 +115,6 @@ public class BeanFactoryStub implements BeanFactory, ApplicationContext
 
 	@Override
 	public String[] getAliases(String name)
-	{
-		throw new RuntimeException("Method is not implemented");
-	}
-
-	@Override
-	public Environment getEnvironment()
 	{
 		throw new RuntimeException("Method is not implemented");
 	}
@@ -261,6 +277,504 @@ public class BeanFactoryStub implements BeanFactory, ApplicationContext
 
 	@Override
 	public AutowireCapableBeanFactory getAutowireCapableBeanFactory() throws IllegalStateException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void start()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void stop()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isRunning()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setId(String id)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setParent(ApplicationContext parent)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public ConfigurableEnvironment getEnvironment()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setEnvironment(ConfigurableEnvironment environment)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addApplicationListener(ApplicationListener<?> listener)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addProtocolResolver(ProtocolResolver resolver)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void refresh() throws BeansException, IllegalStateException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerShutdownHook()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void close()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isActive()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public ConfigurableListableBeanFactory getBeanFactory() throws IllegalStateException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public <T> T createBean(Class<T> beanClass) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void autowireBean(Object existingBean) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object configureBean(Object existingBean, String beanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object createBean(Class<?> beanClass, int autowireMode, boolean dependencyCheck) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object autowire(Class<?> beanClass, int autowireMode, boolean dependencyCheck) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void autowireBeanProperties(Object existingBean, int autowireMode, boolean dependencyCheck) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void applyBeanPropertyValues(Object existingBean, String beanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object initializeBean(Object existingBean, String beanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void destroyBean(Object existingBean)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public <T> NamedBeanHolder<T> resolveNamedBean(Class<T> requiredType) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object resolveDependency(DependencyDescriptor descriptor, String requestingBeanName) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object resolveDependency(DependencyDescriptor descriptor, String requestingBeanName, Set<String> autowiredBeanNames, TypeConverter typeConverter) throws BeansException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setParentBeanFactory(BeanFactory parentBeanFactory) throws IllegalStateException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setBeanClassLoader(ClassLoader beanClassLoader)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public ClassLoader getBeanClassLoader()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setTempClassLoader(ClassLoader tempClassLoader)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public ClassLoader getTempClassLoader()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setCacheBeanMetadata(boolean cacheBeanMetadata)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isCacheBeanMetadata()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setBeanExpressionResolver(BeanExpressionResolver resolver)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public BeanExpressionResolver getBeanExpressionResolver()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setConversionService(ConversionService conversionService)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public ConversionService getConversionService()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addPropertyEditorRegistrar(PropertyEditorRegistrar registrar)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerCustomEditor(Class<?> requiredType, Class<? extends PropertyEditor> propertyEditorClass)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void copyRegisteredEditorsTo(PropertyEditorRegistry registry)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setTypeConverter(TypeConverter typeConverter)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public TypeConverter getTypeConverter()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addEmbeddedValueResolver(StringValueResolver valueResolver)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean hasEmbeddedValueResolver()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public String resolveEmbeddedValue(String value)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addBeanPostProcessor(BeanPostProcessor beanPostProcessor)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public int getBeanPostProcessorCount()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerScope(String scopeName, Scope scope)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public String[] getRegisteredScopeNames()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Scope getRegisteredScope(String scopeName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public AccessControlContext getAccessControlContext()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void copyConfigurationFrom(ConfigurableBeanFactory otherFactory)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerAlias(String beanName, String alias) throws BeanDefinitionStoreException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void resolveAliases(StringValueResolver valueResolver)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public BeanDefinition getMergedBeanDefinition(String beanName) throws NoSuchBeanDefinitionException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isFactoryBean(String name) throws NoSuchBeanDefinitionException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setCurrentlyInCreation(String beanName, boolean inCreation)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isCurrentlyInCreation(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerDependentBean(String beanName, String dependentBeanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public String[] getDependentBeans(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public String[] getDependenciesForBean(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void destroyBean(String beanName, Object beanInstance)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void destroyScopedBean(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void destroySingletons()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerSingleton(String beanName, Object singletonObject)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object getSingleton(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean containsSingleton(String beanName)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public String[] getSingletonNames()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public int getSingletonCount()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Object getSingletonMutex()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void ignoreDependencyType(Class<?> type)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void ignoreDependencyInterface(Class<?> ifc)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void registerResolvableDependency(Class<?> dependencyType, Object autowiredValue)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isAutowireCandidate(String beanName, DependencyDescriptor descriptor) throws NoSuchBeanDefinitionException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Iterator<String> getBeanNamesIterator()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void clearMetadataCache()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void freezeConfiguration()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public boolean isConfigurationFrozen()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void preInstantiateSingletons() throws BeansException
 	{
 		throw new RuntimeException("Method is not implemented");
 	}

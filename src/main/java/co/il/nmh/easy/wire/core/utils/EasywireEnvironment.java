@@ -1,8 +1,12 @@
 package co.il.nmh.easy.wire.core.utils;
 
+import java.util.Map;
 import java.util.Properties;
 
-import org.springframework.core.env.Environment;
+import org.springframework.core.convert.support.ConfigurableConversionService;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MissingRequiredPropertiesException;
+import org.springframework.core.env.MutablePropertySources;
 
 import co.il.nmh.easy.wire.core.EasywireBeanFactory;
 
@@ -10,7 +14,7 @@ import co.il.nmh.easy.wire.core.EasywireBeanFactory;
  * @author Maor Hamami
  */
 
-public class EasywireEnvironment implements Environment
+public class EasywireEnvironment implements ConfigurableEnvironment
 {
 	private Properties getProperties()
 	{
@@ -117,5 +121,95 @@ public class EasywireEnvironment implements Environment
 	public boolean acceptsProfiles(String... profiles)
 	{
 		return false;
+	}
+
+	@Override
+	public MutablePropertySources getPropertySources()
+	{
+		return EasywireBeanFactory.INSTANCE.getPropertySources();
+	}
+
+	@Override
+	public ConfigurableConversionService getConversionService()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setConversionService(ConfigurableConversionService conversionService)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setPlaceholderPrefix(String placeholderPrefix)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setPlaceholderSuffix(String placeholderSuffix)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setValueSeparator(String valueSeparator)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setRequiredProperties(String... requiredProperties)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void validateRequiredProperties() throws MissingRequiredPropertiesException
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setActiveProfiles(String... profiles)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void addActiveProfile(String profile)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void setDefaultProfiles(String... profiles)
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Map<String, Object> getSystemEnvironment()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public Map<String, Object> getSystemProperties()
+	{
+		throw new RuntimeException("Method is not implemented");
+	}
+
+	@Override
+	public void merge(ConfigurableEnvironment parent)
+	{
+		throw new RuntimeException("Method is not implemented");
 	}
 }
