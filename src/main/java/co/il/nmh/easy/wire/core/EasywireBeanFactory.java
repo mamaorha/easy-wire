@@ -1173,4 +1173,26 @@ public class EasywireBeanFactory extends BeanFactoryStub
 		pushBean(singletonObject.getClass(), singletonObject);
 		pushBean(beanName, singletonObject);
 	}
+
+	@Override
+	public Object initializeBean(Object existingBean, String beanName) throws BeansException
+	{
+		handlePostConstruct(existingBean);
+		return existingBean;
+	}
+
+	@Override
+	public void autowireBean(Object existingBean) throws BeansException
+	{
+		populateFields(existingBean, true, new LinkedHashSet<>());
+
+		try
+		{
+			propertyManager.handleConfigurationProperties(existingBean);
+		}
+		catch (BindException e)
+		{
+			throw new EasywireException(e);
+		}
+	}
 }
