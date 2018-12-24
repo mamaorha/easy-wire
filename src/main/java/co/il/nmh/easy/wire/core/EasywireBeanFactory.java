@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -161,6 +162,9 @@ public class EasywireBeanFactory extends BeanFactoryStub
 	private void pushBaseBeans()
 	{
 		pushBean(ApplicationContext.class, this, false);
+		pushBean(ConfigurableApplicationContext.class, this, false);
+		pushBean(ConfigurableListableBeanFactory.class, this, false);
+
 		pushBean(FieldsInvestigator.class, fieldsInvestigator, false);
 		pushBean(LoggerTest.class, loggerTest, false);
 	}
