@@ -89,8 +89,6 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 		loggerTest = new LoggerTest();
 		fieldsInvestigator = FieldsInvestigator.INSTANCE;
-
-		clean();
 	}
 
 	public void clean()
@@ -161,12 +159,15 @@ public class EasywireBeanFactory extends BeanFactoryStub
 
 	private void pushBaseBeans()
 	{
-		pushBean(ApplicationContext.class, this, false);
-		pushBean(ConfigurableApplicationContext.class, this, false);
-		pushBean(ConfigurableListableBeanFactory.class, this, false);
+		if (null != basePackage)
+		{
+			pushBean(ApplicationContext.class, this, false);
+			pushBean(ConfigurableApplicationContext.class, this, false);
+			pushBean(ConfigurableListableBeanFactory.class, this, false);
 
-		pushBean(FieldsInvestigator.class, fieldsInvestigator, false);
-		pushBean(LoggerTest.class, loggerTest, false);
+			pushBean(FieldsInvestigator.class, fieldsInvestigator, false);
+			pushBean(LoggerTest.class, loggerTest, false);
+		}
 	}
 
 	public void overrideBean(String beanName, Class<?> overridingClass)
