@@ -14,7 +14,7 @@ now you can just use @Inject of the classes you need and work as you were using 
 Easywire currently supports:
 -------------------
 - injecting beans: @Inject, @Autowire
-- special injection types: @Provider, @Optional, @Value, @Qualifier
+- special injection types: Provider<>, Optional<>, Map<String, ?>, List<?>, @Value, @Qualifier, @ConfigurationProperties
 - injection of mocks: @Mock, @Spy
 - bean definitions: @Bean, @Primary, @Configuration, @Component, @Service, @Named, @Controller, @Repository, @Service
 
