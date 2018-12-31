@@ -73,7 +73,7 @@ public class BeanInformation
 
 		if (!primaryBeanHolderMap.containsKey(clazz))
 		{
-			int matches = 0;
+			List<BeanHolder> matches = new ArrayList<>();
 			boolean hasPrimary = false;
 			BeanHolder selectedBeanHolder = null;
 
@@ -83,7 +83,7 @@ public class BeanInformation
 				{
 					if (clazz.isAssignableFrom(beanHolder.getRealClass()))
 					{
-						matches++;
+						matches.add(beanHolder);
 						hasPrimary = hasPrimary || beanHolder.isPrimary();
 
 						if (null != selectedBeanHolder)
@@ -107,9 +107,9 @@ public class BeanInformation
 				}
 			}
 
-			if (!hasPrimary && matches > 1)
+			if (!hasPrimary && matches.size() > 1)
 			{
-				throw new EasywireException("bean {} has more than one implementation, please define one of them as primary", clazz);
+				throw new EasywireException("bean {} has more than one implementation {}, please define one of them as primary", clazz, matches);
 			}
 
 			if (null == selectedBeanHolder)
